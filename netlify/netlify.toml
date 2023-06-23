@@ -1,0 +1,40 @@
+# Redirects configuration
+[[redirects]]
+from = "/*"
+to = "/index.html"
+status = 200
+
+[[redirects]]
+from = "netlify/functions/*"
+to = "/.netlify/functions/:splat"
+status = 200
+force = true
+[redirects.headers]
+Content-Type = "application/json"
+
+# Build settings
+[build]
+command = "npm run build"  # Modify this command based on your build setup
+functions = "functions"  # Specify the functions directory name
+
+# Header settings
+[[headers]]
+for = "/*"
+[headers.values]
+X-Frame-Options = "DENY"
+X-XSS-Protection = "1; mode=block"
+X-Content-Type-Options = "nosniff"
+
+# Rewrite settings
+[[redirects]]
+from = "/icons/*"
+to = "/icons/:splat"
+status = 200
+[redirects.headers]
+Cache-Control = "public, max-age=604800"
+
+[[redirects]]
+from = "/favicon.ico"
+to = "/icons/favicon.ico"
+status = 200
+
