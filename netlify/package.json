@@ -1,22 +1,22 @@
 {
-    "name": "storm-weather",
-    "version": "1.0.0",
-    "main": "index.js",
-    "scripts": {
-        "start": "netlify dev",
-        "build": "netlify run build",
-        "deploy": "netlify deploy",
-        "test": "echo \"Error: no test specified\" && exit 1"
-    },
-    "dependencies": {
-        "axios": "*",
-        "cheerio": "^1.0.0-rc.10",
-        "qs": "^6.11.2"
-    },
-    "devDependencies": {
-        "netlify-cli": "^6.7.1"
-    },
-    "engines": {
-        "node": ">=12"
-    }
+  "name": "storm-weather",
+  "version": "1.0.0",
+  "main": "index.js",
+  "scripts": {
+    "start": "netlify dev",
+    "build": "netlify build",
+    "deploy": "netlify deploy",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "dependencies": {
+    "axios": "^0.24.0",
+    "cheerio": "^1.0.0-rc.10",
+    "qs": "^6.11.2"
+  },
+  "devDependencies": {
+    "netlify-cli": "^6.7.1"
+  },
+  "engines": {
+    "node": ">=12"
+  }
 }
