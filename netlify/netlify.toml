@@ -38,3 +38,7 @@ from = "/favicon.ico"
 to = "/icons/favicon.ico"
 status = 200
 
+[[plugins]]
+package = "@netlify/plugin-functions-install-core"
+
+
