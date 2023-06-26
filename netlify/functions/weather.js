@@ -37,7 +37,7 @@ exports.handler = function (event, context, callback) {
           const riskLevel = tickArrowLeft * 100;
           
           const detailedWeatherEvents = [];
-          $('div.results-list div.item').each(function (index) {
+          $('div.results-list div.item').each(function () {
                                               const date = $(this).find('div.media-left b').text();
                                               const type = $(this).find('div.media-body div.bold').text();
                                               const magnitude = $(this).find('div.media-body').contents().last().text().trim();
@@ -52,38 +52,42 @@ exports.handler = function (event, context, callback) {
                                               }
                                               
                                               const weatherEvent = {
-                                              date: date,
-                                              type: type,
-                                              magnitude: magnitude,
-                                              icon: {
-                                              url: iconURL
-                                              }
+                                              'Date': date,
+                                              'Type': type,
+                                              'Magnitude': magnitude,
+                                              'Icon': iconURL
                                               };
                                               
-                                              // Create unique reference headers
-                                              const referenceHeaders = {
-                                              date: `date${index + 1}`,
-                                              type: `type${index + 1}`,
-                                              magnitude: `magnitude${index + 1}`,
-                                              icon: `icon${index + 1}`
-                                              };
-                                              
-                                              // Map weatherEvent and referenceHeaders together
-                                              const detailedWeatherEvent = Object.assign({}, weatherEvent, referenceHeaders);
-                                              detailedWeatherEvents.push(detailedWeatherEvent);
+                                              detailedWeatherEvents.push(weatherEvent);
                                               });
           
+          const flattenedWeatherEvents = detailedWeatherEvents.flatMap((event, index) => {
+                                                                       const flattenedEvent = {};
+                                                                       for (const key in event) {
+                                                                       flattenedEvent[`${key}${index + 1}`] = event[key];
+                                                                       }
+                                                                       return flattenedEvent;
+                                                                       });
+          
           const report = {
-          property: property,
-          history: history,
-          riskFactor: riskFactor,
-          riskLevel: riskLevel,
-          detailedWeatherEvents: detailedWeatherEvents
+          'Property': property,
+          'History': history,
+          'RiskFactor': riskFactor,
+          'RiskLevel': riskLevel,
+          ...flattenedWeatherEvents[0] // Assume at least one weather event exists
           };
+          
+          const headers = Object.keys(report);
+          
+          const rows = [headers];
+          rows.push(Object.values(report));
+          flattenedWeatherEvents.forEach(event => {
+                                         rows.push(Object.values(event));
+                                         });
           
           const responseObject = {
           statusCode: 200,
-          body: JSON.stringify(report),
+          body: JSON.stringify(rows),
           headers: {
           'Content-Type': 'application/json'
           }
