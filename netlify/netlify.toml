@@ -14,7 +14,7 @@ Content-Type = "application/json"
 
 # Build settings
 [build]
-command = "npm run build"  # Modify this command based on your build setup
+command = "npm install && cd /function && npm install && cd ... & npm run build"  # Modify this command based on your build setup
 functions = "functions"  # Specify the functions directory name
 
 # Header settings
