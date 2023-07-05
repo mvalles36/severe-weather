@@ -1,110 +1,98 @@
 const axios = require('axios');
-const qs = require('qs');
 const cheerio = require('cheerio');
-const fs = require('fs');
-const path = require('path');
+const { GoogleSpreadsheet } = require('google-spreadsheet');
+const credentials = require('./credentials.json');
 
-exports.handler = function (event, context, callback) {
-    const address = event.queryStringParameters.address || '';
-    
-    const data = qs.stringify({
-                              address: address
-                              });
-    
-    const config = {
-    method: 'post',
-    maxBodyLength: Infinity,
-    url: 'https://www.drroof.com/ws/retrieve-weather-results',
-    headers: {
-        'Content-Type': 'application/x-www-form-urlencoded',
-        'Cookie': 'ARRAffinity=ebe2790d749702022a54ce9bf5ef49208f8970a38b82360408bfec3955380433; ARRAffinitySameSite=ebe2790d749702022a54ce9bf5ef49208f8970a38b82360408bfec3955380433',
-        'Accept': 'text/html; charset=utf-8'
-    },
-    data: data
-    };
-    
-    axios(config)
-    .then(function (response) {
-          const html = response.data;
-          const $ = cheerio.load(html);
-          
-          const property = $('div.loaded-weather-section p:nth-child(1)').text().replace('PROPERTY: ', '');
-          const history = $('div.loaded-weather-section p:nth-child(2)').text().replace('HISTORY: ', '');
-          const riskFactor = $('div.loaded-weather-section p:nth-child(3)').text().replace('CURRENT RISK FACTOR: ', '');
-          
-          const riskBar = $('div.risk-bar');
-          const tickArrowLeft = parseFloat(riskBar.find('div.tick-arrow').css('left'));
-          const riskLevel = tickArrowLeft * 100;
-          
-          const detailedWeatherEvents = [];
-          $('div.results-list div.item').each(function () {
-                                              const date = $(this).find('div.media-left b').text();
-                                              const type = $(this).find('div.media-body div.bold').text();
-                                              const magnitude = $(this).find('div.media-body').contents().last().text().trim();
-                                              
-                                              let iconURL;
-                                              if (type === 'Hail') {
-                                              iconURL = 'https://severe-weather.netlify.app/functions/icons/icon-hail.png';
-                                              } else if (type === 'Wind') {
-                                              iconURL = 'https://severe-weather.netlify.app/functions/icons/icon-wind.png';
-                                              } else {
-                                              iconURL = 'https://example.com/default-icon.png'; // Default icon URL
-                                              }
-                                              
-                                              const weatherEvent = {
-                                              'Date': date,
-                                              'Type': type,
-                                              'Magnitude': magnitude,
-                                              'Icon': iconURL
-                                              };
-                                              
-                                              detailedWeatherEvents.push(weatherEvent);
-                                              });
-          
-          const flattenedWeatherEvents = detailedWeatherEvents.flatMap((event, index) => {
-                                                                       const flattenedEvent = {};
-                                                                       for (const key in event) {
-                                                                       flattenedEvent[`${key}${index + 1}`] = event[key];
-                                                                       }
-                                                                       return flattenedEvent;
-                                                                       });
-          
-          const report = {
-          'Property': property,
-          'History': history,
-          'RiskFactor': riskFactor,
-          'RiskLevel': riskLevel,
-          ...flattenedWeatherEvents[0] // Assume at least one weather event exists
-          };
-          
-          const headers = Object.keys(report);
-          
-          const rows = [headers];
-          rows.push(Object.values(report));
-          flattenedWeatherEvents.forEach(event => {
-                                         rows.push(Object.values(event));
-                                         });
-          
-          const responseObject = {
-          statusCode: 200,
-          body: JSON.stringify(rows),
-          headers: {
-          'Content-Type': 'application/json'
-          }
-          };
-          
-          return callback(null, responseObject);
-          })
-    .catch(function (error) {
-           const errorResponse = {
-           statusCode: 500,
-           body: JSON.stringify({ error: 'An error occurred' }),
-           headers: {
-           'Content-Type': 'application/json'
-           }
-           };
-           
-           return callback(null, errorResponse);
-           });
+// Define the Google API key as a global variable
+const GOOGLE_API_KEY = 'AIzaSyAS72566eF3MF9HZ3HhUq4tuflB-0iJibE';
+
+exports.handler = async (event, context) => {
+    try {
+        const address = event.queryStringParameters.address;
+        
+        // Retrieve latitude and longitude using Google Geocoding API
+        const geocodingUrl = `https://maps.googleapis.com/maps/api/geocode/json?address=${encodeURIComponent(address)}&key=${GOOGLE_API_KEY}`;
+        const geocodingResponse = await axios.get(geocodingUrl);
+        const location = geocodingResponse.data.results[0].geometry.location;
+        const { lat, lng } = location;
+        
+        // Generate the static map URL using the obtained latitude and longitude
+        const staticMapUrl = `https://maps.googleapis.com/maps/api/staticmap?center=${lat},${lng}&zoom=21&size=576x576&maptype=satellite&key=${GOOGLE_API_KEY}`;
+        
+        // Fetch weather data from drroof.com
+        const url = `https://www.drroof.com/ws/retrieve-weather-results?address=${encodeURIComponent(address)}`;
+        const response = await axios.post(url, {
+                                          headers: {
+                                          'Content-Type': 'application/x-www-form-urlencoded',
+                                          Cookie:
+                                          'ARRAffinity=ebe2790d749702022a54ce9bf5ef49208f8970a38b82360408bfec3955380433; ARRAffinitySameSite=ebe2790d749702022a54ce9bf5ef49208f8970a38b82360408bfec3955380433',
+                                          },
+                                          });
+        
+        const $ = cheerio.load(response.data);
+        
+        const property = $('.loaded-weather-section p:nth-child(1)')
+        .text()
+        .replace('PROPERTY:', '')
+        .trim();
+        const historyText = $('.loaded-weather-section p:nth-child(2)').text().trim();
+        const historyCountMatch = historyText.match(/\d+/);
+        const historyCount = historyCountMatch ? parseInt(historyCountMatch[0]) : null;
+        const riskFactor = $('.loaded-weather-section p:nth-child(3)')
+        .text()
+        .replace('CURRENT RISK FACTOR:', '')
+        .trim();
+        const riskLevel = parseFloat($('.loaded-weather-section .tick-arrow').css('left'));
+        const events = {};
+        
+        $('.results-list .item').each((index, element) => {
+                                      const date = $(element).find('.media-left b').text().trim();
+                                      const weatherType = $(element).find('.media-body .bold').text().trim();
+                                      const magnitude = $(element).find('.media-body').contents().last().text().trim();
+                                      let icon = '';
+                                      
+                                      if (weatherType === 'Hail') {
+                                      icon = 'https://severe-weather.netlify.app/functions/icons/icon-hail.png';
+                                      } else if (weatherType === 'Wind') {
+                                      icon = 'https://severe-weather.netlify.app/functions/icons/icon-wind.png';
+                                      }
+                                      
+                                      events[`event.date ${index + 1}`] = date;
+                                      events[`event.weatherType ${index + 1}`] = weatherType;
+                                      events[`event.magnitude ${index + 1}`] = magnitude;
+                                      events[`event.icon ${index + 1}`] = icon;
+                                      });
+        
+        const result = {
+        firstName: event.queryStringParameters.firstName,
+        lastName: event.queryStringParameters.lastName,
+        email: event.queryStringParameters.email,
+        Property: property,
+        historyCount: historyCount,
+        riskFactor: riskFactor,
+        riskLevel: riskLevel,
+        staticMapUrl: staticMapUrl,
+            ...events,
+        };
+        
+        // Authenticate with the Google API using the credentials file
+        const doc = new GoogleSpreadsheet('1eDLdYACz7brMWnasJD_LeDEjccQbzicfWZTdPbvIk7c');
+        await doc.useServiceAccountAuth(credentials);
+        await doc.loadInfo();
+        const sheet = doc.sheetsByIndex[0]; // Assuming you want to write to the first sheet
+        const rows = await sheet.getRows();
+        await sheet.addRow(result);
+        
+        return {
+        statusCode: 200,
+        body: JSON.stringify(result),
+        };
+    } catch (error) {
+        console.log(error);
+        return {
+        statusCode: 500,
+        body: JSON.stringify({ error: 'An error occurred' }),
+        };
+    }
 };
 
