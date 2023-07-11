@@ -8,7 +8,7 @@ const GOOGLE_API_KEY = 'AIzaSyAS72566eF3MF9HZ3HhUq4tuflB-0iJibE';
 
 exports.handler = async (event, context) => {
     try {
-        const address = event.queryStringParameters.address;
+        const { firstName, lastName, email, address } = event.queryStringParameters;
         
         // Retrieve latitude and longitude using Google Geocoding API
         const geocodingUrl = `https://maps.googleapis.com/maps/api/geocode/json?address=${encodeURIComponent(address)}&key=${GOOGLE_API_KEY}`;
@@ -30,6 +30,16 @@ exports.handler = async (event, context) => {
                                           });
         
         const $ = cheerio.load(response.data);
+
+        const config = {
+        method: 'get',
+        maxBodyLength: Infinity,
+        url: `https://footprints.roofr.com/footprint/${lat}/${lng}`,
+        headers: {},
+        };
+        
+        const footprintResponse = await axios(config);
+        const { centroid, sqft, geojson, distance } = footprintResponse.data.data[0];
         
         const property = $('.loaded-weather-section p:nth-child(1)')
         .text()
@@ -64,16 +74,21 @@ exports.handler = async (event, context) => {
                                       });
         
         const result = {
-        firstName: event.queryStringParameters.firstName,
-        lastName: event.queryStringParameters.lastName,
-        email: event.queryStringParameters.email,
+        firstName: firstName,
+        lastName: lastName,
+        email: email,
         Property: property,
         historyCount: historyCount,
         riskFactor: riskFactor,
         riskLevel: riskLevel,
         staticMapUrl: staticMapUrl,
             ...events,
+        Centroid: centroid,
+        Sqft: sqft,
+        Geojson: geojson,
+        Distance: distance,
         };
+        
         
         // Authenticate with the Google API using the credentials file
         const doc = new GoogleSpreadsheet('1eDLdYACz7brMWnasJD_LeDEjccQbzicfWZTdPbvIk7c');
