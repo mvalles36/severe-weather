@@ -5,28 +5,6 @@ to = "/index.html"
 status = 200
 
 [[redirects]]
-from = "netlify/functions/*"
-to = "/.netlify/functions/:splat"
-status = 200
-force = true
-[redirects.headers]
-Content-Type = "application/json"
-
-# Build settings
-[build]
-command = "npm install"  # Modify this command based on your build setup
-functions = "functions"  # Specify the functions directory name
-
-# Header settings
-[[headers]]
-for = "/*"
-[headers.values]
-X-Frame-Options = "DENY"
-X-XSS-Protection = "1; mode=block"
-X-Content-Type-Options = "nosniff"
-
-# Rewrite settings
-[[redirects]]
 from = "/icons/*"
 to = "/icons/:splat"
 status = 200
@@ -38,6 +16,17 @@ from = "/favicon.ico"
 to = "/icons/favicon.ico"
 status = 200
 
-[[plugins]]
-package = "@netlify/plugin-functions-install-core"
+[build]
+command = "npm run build" # The command to build your functions
+publish = "public" # The directory to publish
+
+[functions]
+directory = "functions"
+
+[[headers]]
+for = "/*"
+[headers.values]
+X-Frame-Options = "DENY"
+X-XSS-Protection = "1; mode=block"
+X-Content-Type-Options = "nosniff"
 
