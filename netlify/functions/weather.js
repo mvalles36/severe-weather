@@ -8,7 +8,7 @@ const SCOPES = [
                 ];
 const creds = require('./credentials.json'); // the file saved above
 
-const jwt = new JWT({
+const serviceAccountAuth = new JWT({
                     email: creds.client_email,
                     key: creds.private_key,
                     scopes: SCOPES,
