@@ -13,7 +13,7 @@ const jwt = new JWT({
                     key: creds.private_key,
                     scopes: SCOPES,
                     });
-const doc = new GoogleSpreadsheet(process.env.SPREADSHEET_ID);
+const doc = new GoogleSpreadsheet(process.env.SPREADSHEET_ID), serviceAccountAuth);
 
 exports.handler = async (event, context) => {
     try {
@@ -107,12 +107,9 @@ Geojson: geojson,
 Distance: distance,
 };
 
-await doc.useServiceAccountAuth({
-                                client_email: creds.client_email,
-                                private_key: creds.private_key,
-                                });
 await doc.loadInfo();
-const sheet = doc.sheetsByIndex[0]; // Assuming you want to write to the first sheet
+console.log(doc.title);
+const sheet = doc.sheetsByIndex[0]; 
 const rows = await sheet.getRows();
 await sheet.addRow(result);
 
