@@ -17,7 +17,6 @@ to = "/icons/favicon.ico"
 status = 200
 
 [build]
-command = "npm run build" # The command to build your functions
 publish = "public" # The directory to publish
 
 [functions]
