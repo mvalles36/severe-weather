@@ -33,7 +33,7 @@ const markerColor = 'ff0000'; // Red marker color (hex value)
 const mapWidth = 800;
 const mapHeight = 600;
 
-const mapImage = `https://api.mapbox.com/styles/v1/${mapboxStyle}/static/pin-s-l+${markerColor}(${lng},${lat})/${lng},${lat},14,0,0/${mapWidth}x${mapHeight}?access_token=${mapboxAccessToken}`;
+const mapImage = `https://api.mapbox.com/styles/v1/${mapboxStyle}/static/pin-s-l+${markerColor}(${lat},${lng})/${lng},${lat},14,0,0/${mapWidth}x${mapHeight}?access_token=${mapboxAccessToken}`;
 
     // Fetch weather data from drroof.com
     const url = `https://www.drroof.com/ws/retrieve-weather-results?address=${encodeURIComponent(
