@@ -27,9 +27,14 @@ exports.handler = async (event, context) => {
     const location = geocodingResponse.data.results[0].geometry.location;
     const { lat, lng } = location;
     
-    // Generate the static map URL using the obtained latitude and longitude
-    const staticMapUrl = `https://maps.googleapis.com/maps/api/staticmap?center=${lat},${lng}&zoom=21&size=576x576&maptype=satellite&key=${process.env.GOOGLE_API_KEY}`;
-    
+const mapboxAccessToken = process.env.MAPBOX_ACCESS_TOKEN;
+const mapboxStyle = 'mapbox://styles/mapbox/satellite-v9'; 
+const markerColor = 'ff0000'; // Red marker color (hex value)
+const mapWidth = 800;
+const mapHeight = 600;
+
+const mapImage = `https://api.mapbox.com/styles/v1/${mapboxStyle}/static/pin-s-l+${markerColor}(${lng},${lat})/${lng},${lat},14,0,0/${mapWidth}x${mapHeight}?access_token=${mapboxAccessToken}`;
+
     // Fetch weather data from drroof.com
     const url = `https://www.drroof.com/ws/retrieve-weather-results?address=${encodeURIComponent(
     address
@@ -94,7 +99,7 @@ Property: property,
 historyCount: historyCount,
 riskFactor: riskFactor,
 riskLevel: riskLevel,
-staticMapUrl: staticMapUrl,
+mapImage: mapImage,
     ...events,
 Centroid: centroid,
 Sqft: sqft,
