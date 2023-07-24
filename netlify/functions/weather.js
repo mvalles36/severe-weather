@@ -32,6 +32,8 @@ const mapboxStyle = 'mapbox://styles/mapbox/satellite-v9';
 const markerColor = 'ff0000'; // Red marker color (hex value)
 const mapWidth = 800;
 const mapHeight = 600;
+console.log("Latitude:", lat);
+console.log("Longitude:", lng);
 
 const mapImage = `https://api.mapbox.com/styles/v1/${mapboxStyle}/static/pin-s-l+${markerColor}(${lat},${lng})/${lng},${lat},14,0,0/${mapWidth}x${mapHeight}?access_token=${mapboxAccessToken}`;
 
