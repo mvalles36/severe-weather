@@ -13,7 +13,7 @@ const jwt = new JWT({
                     key: creds.private_key,
                     scopes: SCOPES,
                     });
-const doc = new GoogleSpreadsheet(process.env.SPREADSHEET_ID), serviceAccountAuth);
+const doc = new GoogleSpreadsheet('1eDLdYACz7brMWnasJD_LeDEjccQbzicfWZTdPbvIk7c', serviceAccountAuth);
 
 exports.handler = async (event, context) => {
     try {
