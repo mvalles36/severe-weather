@@ -2,7 +2,7 @@
   "name": "severe-weather",
   "version": "1.0.0",
   "description": "",
-  "main": "index.html",
+  "main": "functions/weather",
   "scripts": {
     "test": "jester"
   },
