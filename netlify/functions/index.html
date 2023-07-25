@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8">
+            <meta name="viewport" content="width=device-width, initial-scale=1.0">
+                <title>Weather Report Form</title>
+                <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyAS72566eF3MF9HZ3HhUq4tuflB-0iJibE&libraries=places"></script>
+
+    </head>
+    <body>
+        <h1>Weather Report Form</h1>
+        <form id="weatherForm">
+            <label for="firstName">First Name:</label>
+            <input type="text" id="firstName" name="firstName" required><br>
+                <label for="lastName">Last Name:</label>
+                <input type="text" id="lastName" name="lastName" required><br>
+                    <label for="email">Email:</label>
+                    <input type="email" id="email" name="email" required><br>
+                        <label for="address">Address:</label>
+                        <input type="text" id="address" name="address" required autocomplete="off">
+                            <button type="submit">Submit</button>
+                            </form>
+        
+        <div id="resultContainer"></div>
+        
+        <script>
+            document.getElementById('weatherForm').addEventListener('submit', async function (event) {
+                                                                    event.preventDefault();
+                                                                    
+                                                                    const formData = new FormData(event.target);
+                                                                    const searchParams = new URLSearchParams(formData);
+                                                                    
+                                                                    try {
+                                                                    const response = await fetch('https://severe-weather.netlify.app/.netlify/functions/weather?' + searchParams.toString());
+                                                                    const data = await response.json();
+                                                                    console.log(data);
+                                                                    
+                                                                    // Display the result on the page
+                                                                    const resultContainer = document.getElementById('resultContainer');
+                                                                    resultContainer.innerHTML = `
+                                                                    <h2>Weather Report for ${data.Property}</h2>
+                                                                    <p>First Name: ${data.firstName}</p>
+                                                                    <p>Last Name: ${data.lastName}</p>
+                                                                    <p>Email: ${data.email}</p>
+                                                                    <p>Property: ${data.Property}</p>
+                                                                    <p>History Count: ${data.historyCount}</p>
+                                                                    <p>Risk Factor: ${data.riskFactor}</p>
+                                                                    <p>Risk Level: ${data.riskLevel}</p>
+                                                                    <img src="${data.mapImage}" alt="Map Image">
+                                                                    <pre>${JSON.stringify(data, null, 2)}</pre>
+                                                                    `;
+                                                                    } catch (error) {
+                                                                    console.error('Error fetching weather data:', error);
+                                                                    }
+                                                                    });
+            </script>
+        <script>
+            // Initialize the address autocomplete
+            const addressInput = document.getElementById('address');
+            const autocomplete = new google.maps.places.Autocomplete(addressInput);
+            
+            // Prevent form submission on Enter key press to allow address autocomplete to work properly
+            document.getElementById('weatherForm').addEventListener('keydown', (event) => {
+                                                                    if (event.key === 'Enter') {
+                                                                    event.preventDefault();
+                                                                    }
+                                                                    });
+                                                                    
+                                                                    // Handle place selection from autocomplete
+                                                                    autocomplete.addListener('place_changed', () => {
+                                                                                             const place = autocomplete.getPlace();
+                                                                                             if (!place.geometry) {
+                                                                                             console.log('No geometry for selected place');
+                                                                                             return;
+                                                                                             }
+                                                                                             
+                                                                                             const lat = place.geometry.location.lat();
+                                                                                             const lng = place.geometry.location.lng();
+                                                                                             
+                                                                                             // Optionally, you can use the place's formatted address for display
+                                                                                             const formattedAddress = place.formatted_address;
+                                                                                             
+                                                                                             // Set the lat and lng values to hidden form fields for submission
+                                                                                             document.getElementById('lat').value = lat;
+                                                                                             document.getElementById('lng').value = lng;
+                                                                                             });
+            </script>
+
+    </body>
+</html>
+
