@@ -22,36 +22,60 @@
                             </form>
         <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyAS72566eF3MF9HZ3HhUq4tuflB-0iJibE&libraries=places&callback=initAutocomplete" async defer></script>
 <script>
-    function initAutocomplete() {
-      const addressInput = document.getElementById("address");
+  function initAutocomplete() {
+    const addressInput = document.getElementById("address");
+    const latInput = document.getElementById("lat");
+    const lngInput = document.getElementById("lng");
 
-      // Initialize Google Places Autocomplete
-      const autocomplete = new google.maps.places.Autocomplete(addressInput, {
-        types: ["geocode"],
-        componentRestrictions: { country: "us" }, // Restrict results to the United States
-      });
+    // Initialize Google Places Autocomplete
+    const autocomplete = new google.maps.places.Autocomplete(addressInput, {
+      types: ["geocode"],
+      componentRestrictions: { country: "us" }, // Restrict results to the United States
+    });
 
-      // Add a listener for the "place_changed" event to get the selected place
-      autocomplete.addListener("place_changed", function() {
-        const place = autocomplete.getPlace();
+    // Add a listener for the "place_changed" event to get the selected place
+    autocomplete.addListener("place_changed", function() {
+      const place = autocomplete.getPlace();
 
-        // Extract address components from the selected place
-       const lat = place.geometry.location.lat();
+      // Extract latitude and longitude from the selected place
+      const lat = place.geometry.location.lat();
       const lng = place.geometry.location.lng();
-      const formattedAddress = `${street}, ${city}, ${state}, ${zipcode}`;
 
+      // Extract address components from the selected place
+      const addressComponents = place.address_components;
+      let street = '';
+      let city = '';
+      let state = '';
+      let zipcode = '';
+
+      for (const component of addressComponents) {
+        const componentType = component.types[0];
+        if (componentType === 'street_number') {
+          street = component.long_name;
+        } else if (componentType === 'route') {
+          street += ' ' + component.long_name;
+        } else if (componentType === 'locality') {
+          city = component.long_name;
+        } else if (componentType === 'administrative_area_level_1') {
+          state = component.short_name;
+        } else if (componentType === 'postal_code') {
+          zipcode = component.long_name;
+        }
+      }
+
+      // Combine the address components to form the desired address format
+      const formattedAddress = `${street}, ${city}, ${state}, ${zipcode}`;
 
       // Set the formatted address and lat/lng as the values of the corresponding input fields
       addressInput.value = formattedAddress;
-      document.getElementById("lat").value = lat;
-      document.getElementById("lng").value = lng;
+      latInput.value = lat;
+      lngInput.value = lng;
     });
   }
-    document.getElementById("weatherForm").addEventListener("submit", async function(event) {
-      event.preventDefault();
-      // Rest of your form submission code
-    });
-  </script>
+
+  // Rest of the code...
+</script>
+
         <div id="resultContainer"></div>
 
 <script>
