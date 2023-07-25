@@ -56,38 +56,39 @@
                                                                     }
                                                                     });
             </script>
-        <script>
-            // Initialize the address autocomplete
-            const addressInput = document.getElementById('address');
-            const autocomplete = new google.maps.places.Autocomplete(addressInput);
-            
-            // Prevent form submission on Enter key press to allow address autocomplete to work properly
-            document.getElementById('weatherForm').addEventListener('keydown', (event) => {
-                                                                    if (event.key === 'Enter') {
-                                                                    event.preventDefault();
-                                                                    }
-                                                                    });
-                                                                    
-                                                                    // Handle place selection from autocomplete
-                                                                    autocomplete.addListener('place_changed', () => {
-                                                                                             const place = autocomplete.getPlace();
-                                                                                             if (!place.geometry) {
-                                                                                             console.log('No geometry for selected place');
-                                                                                             return;
-                                                                                             }
-                                                                                             
-                                                                                             const lat = place.geometry.location.lat();
-                                                                                             const lng = place.geometry.location.lng();
-                                                                                             
-                                                                                             // Optionally, you can use the place's formatted address for display
-                                                                                             const formattedAddress = place.formatted_address;
-                                                                                             
-                                                                                             // Set the lat and lng values to hidden form fields for submission
-                                                                                             document.getElementById('lat').value = lat;
-                                                                                             document.getElementById('lng').value = lng;
-                                                                                             });
-            </script>
+       <script>
+    document.addEventListener("DOMContentLoaded", function() {
+      const addressInput = document.getElementById("address");
 
+      // Initialize Google Places Autocomplete
+      const autocomplete = new google.maps.places.Autocomplete(addressInput, {
+        types: ["geocode"],
+        componentRestrictions: { country: "us" }, // Restrict results to the United States
+      });
+
+      // Add a listener for the "place_changed" event to get the selected place
+      autocomplete.addListener("place_changed", function() {
+        const place = autocomplete.getPlace();
+
+        // Extract address components from the selected place
+        const street = place.name;
+        const city = place.address_components.find(component => component.types.includes("locality"))?.long_name;
+        const state = place.address_components.find(component => component.types.includes("administrative_area_level_1"))?.short_name;
+        const zipcode = place.address_components.find(component => component.types.includes("postal_code"))?.long_name;
+
+        // Combine the address components to form the desired address format
+        const formattedAddress = `${street}, ${city}, ${state}, ${zipcode}`;
+
+        // Set the formatted address as the value of the address input field
+        addressInput.value = formattedAddress;
+      });
+    });
+
+    document.getElementById("weatherForm").addEventListener("submit", async function(event) {
+      event.preventDefault();
+      // Rest of your form submission code
+    });
+  </script>
     </body>
 </html>
 
