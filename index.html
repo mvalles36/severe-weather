@@ -23,17 +23,19 @@
         
         <div id="resultContainer"></div>
         
-        <script>
-            document.getElementById('weatherForm').addEventListener('submit', async function (event) {
-                                                                    event.preventDefault();
-                                                                    
-                                                                    const formData = new FormData(event.target);
-                                                                    const searchParams = new URLSearchParams(formData);
-                                                                    
-                                                                    try {
-                                                                    const response = await fetch('https://severe-weather.netlify.app/.netlify/functions/weather?' + searchParams.toString());
-                                                                    const data = await response.json();
-                                                                    console.log(data);
+       <script>
+    document.getElementById("weatherForm").addEventListener("submit", async function(event) {
+      event.preventDefault();
+      const form = event.target;
+      const formData = new FormData(form);
+
+      const encodedAddress = encodeURIComponent(formData.get("address"));
+      const query = new URLSearchParams(formData);
+      query.set("address", encodedAddress);
+
+      const response = await fetch(`https://severe-weather.netlify.app/.netlify/functions/weather?${query.toString()}`);
+      const data = await response.json();
+      console.log(data);
                                                                     
                                                                     // Display the result on the page
                                                                     const resultContainer = document.getElementById('resultContainer');
