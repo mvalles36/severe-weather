@@ -17,7 +17,7 @@ to = "/icons/favicon.ico"
 status = 200
 
 [build]
-functions = "functions"
+publish = "/"  
 
 [functions]
 directory = "functions"
