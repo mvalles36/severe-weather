@@ -8,6 +8,8 @@
     <body>
         <h1>Weather Report Form</h1>
         <form id="weatherForm">
+            <input type="hidden" id="lat" name="lat" value="">
+          <input type="hidden" id="lng" name="lng" value="">
             <label for="firstName">First Name:</label>
             <input type="text" id="firstName" name="firstName" required><br>
                 <label for="lastName">Last Name:</label>
@@ -34,19 +36,17 @@
         const place = autocomplete.getPlace();
 
         // Extract address components from the selected place
-        const street = place.name;
-        const city = place.address_components.find(component => component.types.includes("locality"))?.long_name;
-        const state = place.address_components.find(component => component.types.includes("administrative_area_level_1"))?.short_name;
-        const zipcode = place.address_components.find(component => component.types.includes("postal_code"))?.long_name;
+       const lat = place.geometry.location.lat();
+      const lng = place.geometry.location.lng();
+      const formattedAddress = `${street}, ${city}, ${state}, ${zipcode}`;
 
-        // Combine the address components to form the desired address format
-        const formattedAddress = `${street}, ${city}, ${state}, ${zipcode}`;
 
-        // Set the formatted address as the value of the address input field
-        addressInput.value = formattedAddress;
-      });
-    }
-
+      // Set the formatted address and lat/lng as the values of the corresponding input fields
+      addressInput.value = formattedAddress;
+      document.getElementById("lat").value = lat;
+      document.getElementById("lng").value = lng;
+    });
+  }
     document.getElementById("weatherForm").addEventListener("submit", async function(event) {
       event.preventDefault();
       // Rest of your form submission code
