@@ -4,8 +4,6 @@
         <meta charset="UTF-8">
             <meta name="viewport" content="width=device-width, initial-scale=1.0">
                 <title>Weather Report Form</title>
-                <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyAS72566eF3MF9HZ3HhUq4tuflB-0iJibE&libraries=places"></script>
-
     </head>
     <body>
         <h1>Weather Report Form</h1>
@@ -20,7 +18,40 @@
                         <input type="text" id="address" name="address" required autocomplete="off">
                             <button type="submit">Submit</button>
                             </form>
-        
+        <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyAS72566eF3MF9HZ3HhUq4tuflB-0iJibE&libraries=places&callback=initAutocomplete" async defer></script>
+<script>
+    function initAutocomplete() {
+      const addressInput = document.getElementById("address");
+
+      // Initialize Google Places Autocomplete
+      const autocomplete = new google.maps.places.Autocomplete(addressInput, {
+        types: ["geocode"],
+        componentRestrictions: { country: "us" }, // Restrict results to the United States
+      });
+
+      // Add a listener for the "place_changed" event to get the selected place
+      autocomplete.addListener("place_changed", function() {
+        const place = autocomplete.getPlace();
+
+        // Extract address components from the selected place
+        const street = place.name;
+        const city = place.address_components.find(component => component.types.includes("locality"))?.long_name;
+        const state = place.address_components.find(component => component.types.includes("administrative_area_level_1"))?.short_name;
+        const zipcode = place.address_components.find(component => component.types.includes("postal_code"))?.long_name;
+
+        // Combine the address components to form the desired address format
+        const formattedAddress = `${street}, ${city}, ${state}, ${zipcode}`;
+
+        // Set the formatted address as the value of the address input field
+        addressInput.value = formattedAddress;
+      });
+    }
+
+    document.getElementById("weatherForm").addEventListener("submit", async function(event) {
+      event.preventDefault();
+      // Rest of your form submission code
+    });
+  </script>
         <div id="resultContainer"></div>
         
        <script>
@@ -56,39 +87,6 @@
                                                                     }
                                                                     });
             </script>
-       <script>
-    document.addEventListener("DOMContentLoaded", function() {
-      const addressInput = document.getElementById("address");
-
-      // Initialize Google Places Autocomplete
-      const autocomplete = new google.maps.places.Autocomplete(addressInput, {
-        types: ["geocode"],
-        componentRestrictions: { country: "us" }, // Restrict results to the United States
-      });
-
-      // Add a listener for the "place_changed" event to get the selected place
-      autocomplete.addListener("place_changed", function() {
-        const place = autocomplete.getPlace();
-
-        // Extract address components from the selected place
-        const street = place.name;
-        const city = place.address_components.find(component => component.types.includes("locality"))?.long_name;
-        const state = place.address_components.find(component => component.types.includes("administrative_area_level_1"))?.short_name;
-        const zipcode = place.address_components.find(component => component.types.includes("postal_code"))?.long_name;
-
-        // Combine the address components to form the desired address format
-        const formattedAddress = `${street}, ${city}, ${state}, ${zipcode}`;
-
-        // Set the formatted address as the value of the address input field
-        addressInput.value = formattedAddress;
-      });
-    });
-
-    document.getElementById("weatherForm").addEventListener("submit", async function(event) {
-      event.preventDefault();
-      // Rest of your form submission code
-    });
-  </script>
     </body>
 </html>
 
