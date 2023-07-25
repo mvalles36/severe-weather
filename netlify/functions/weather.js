@@ -18,14 +18,8 @@ const doc = new GoogleSpreadsheet('1eDLdYACz7brMWnasJD_LeDEjccQbzicfWZTdPbvIk7c'
 exports.handler = async (event, context) => {
     try {
         const { firstName, lastName, email, address } = event.queryStringParameters;
-        
-        // Retrieve latitude and longitude using Google Geocoding API
-        const geocodingUrl = `https://maps.googleapis.com/maps/api/geocode/json?address=${encodeURIComponent(
-        address
-        )}&key=${process.env.GOOGLE_API_KEY}`;
-    const geocodingResponse = await axios.get(geocodingUrl);
-    const location = geocodingResponse.data.results[0].geometry.location;
-    const { lat, lng } = location;
+        const lat = event.queryStringParameters.lat;
+        const lng = event.queryStringParameters.lng;
     
 const mapboxAccessToken = process.env.MAPBOX_ACCESS_TOKEN;
 const mapboxStyle = 'mapbox://styles/mapbox/satellite-v9';
