@@ -146,7 +146,7 @@ const geojsonFeature = {
 const geojsonString = encodeURIComponent(JSON.stringify(geojsonFeature));
 
 // Create the URL for the Google static map with the polygon overlay
-const mapImage = `https://api.mapbox.com/styles/v1/mapbox/satellite-v9/static/path-5+f44-0.5(${geojsonString})/${lng},${lat},14,0,0/${mapWidth}x${mapHeight}?access_token=${mapboxAccessToken};
+const mapImage = `https://api.mapbox.com/styles/v1/mapbox/satellite-v9/static/path-5+f44-0.5(${geojsonString})/${lng},${lat},14,0,0/${mapWidth}x${mapHeight}?access_token=${mapboxAccessToken}`;
 // Display the map with the polygon overlay
 mapContainer.innerHTML = `<img src="${mapImage}" alt="Map with Polygon Overlay">`;
 
