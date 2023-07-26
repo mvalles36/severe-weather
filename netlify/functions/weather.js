@@ -74,9 +74,9 @@ $('.results-list .item').each((index, element) => {
                               let icon = '';
                               
                               if (weatherType === 'Hail') {
-                              icon = 'https://severe-weather.netlify.app/functions/icons/icon-hail.png';
+                              icon = 'https://severe-weather.netlify.app/netlify/functions/icons/icon-hail.png';
                               } else if (weatherType === 'Wind') {
-                              icon = 'https://severe-weather.netlify.app/functions/icons/icon-wind.png';
+                              icon = 'https://severe-weather.netlify.app/netlify/functions/icons/icon-wind.png';
                               }
                               
                               events[`event.date${index + 1}`] = date;
