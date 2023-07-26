@@ -4,6 +4,13 @@
         <meta charset="UTF-8">
             <meta name="viewport" content="width=device-width, initial-scale=1.0">
                 <title>Weather Report Form</title>
+        <style>
+        /* Set the map container size */
+        #map {
+            height: 500px;
+            width: 100%;
+        }
+    </style>
     </head>
     <body>
         <h1>Weather Report Form</h1>
@@ -79,6 +86,7 @@
 <div id="loadingMessage" style="display: none;">Submitting form, please wait...</div>
 
         <div id="resultContainer"></div>
+        <div id="map"></div>
 
 <script>
    document.getElementById("weatherForm").addEventListener("submit", async function(event) {
@@ -102,15 +110,11 @@
 
     const resultContainer = document.getElementById('resultContainer');
     resultContainer.innerHTML = `
-      <h2>Weather Report for ${data.Property}</h2>
-      <p>First Name: ${data.firstName}</p>
-      <p>Last Name: ${data.lastName}</p>
-      <p>Email: ${data.email}</p>
-      <p>Property: ${data.Property}</p>
-      <p>History Count: ${data.historyCount}</p>
-      <p>Risk Factor: ${data.riskFactor}</p>
-      <p>Risk Level: ${data.riskLevel}</p>
-      <img src="${data.mapImage}" alt="Map Image">
+      <h2>Roof Damage Report for ${data.Property}</h2>
+      <h3>Square Feet: ${data.sqft}
+      <p>Number of Severe Storms: ${data.historyCount}</p>
+      <p><img src="https://img1.niftyimages.com/gb/5xnr/ebnr?val=${data.riskLevel}</></p>
+      <p>Risk Factor: ${data.riskLevel}</p>
       <p>Date: ${data["event.date1"]}</p>
       <p>Type: ${data["event.weatherType1"]}</p>
       <p>Magnitude: ${data["event.magnitude1"]}</p>
@@ -128,6 +132,43 @@
 });
 
 </script>
+        <script>
+        function initMap() {
+            // GeoJSON data representing the roof polygon
+            const geojsonData = ${data.geojson}; // Assuming data.geojson is already a parsed JavaScript object
+
+            // Centroid data
+            const centroidData = ${data.centroid}; // Assuming data.centroid is already a parsed JavaScript object
+            const centroidCoordinates = centroidData.coordinates;
+            const centroidLatLng = { lat: centroidCoordinates[1], lng: centroidCoordinates[0] };
+
+            // Create a new map centered at the centroid
+            const map = new google.maps.Map(document.getElementById("map"), {
+                center: centroidLatLng,
+                zoom: 18, // You can adjust the zoom level to fit the polygon
+            });
+
+            // Convert the GeoJSON data to a Google Maps Polygon
+            const polygon = new google.maps.Polygon({
+                paths: geojsonData.coordinates,
+                strokeColor: "#FF0000",
+                strokeOpacity: 0.8,
+                strokeWeight: 2,
+                fillColor: "#FF0000",
+                fillOpacity: 0.35,
+            });
+
+            // Set the polygon on the map
+            polygon.setMap(map);
+
+            // Mark the centroid as a marker on the map
+            const marker = new google.maps.Marker({
+                position: centroidLatLng,
+                map: map,
+                title: "Roof Centroid",
+            });
+        }
+    </script>
 
     </body>
 </html>
