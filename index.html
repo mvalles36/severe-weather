@@ -99,65 +99,38 @@
             query.set("address", address);
 
             try {
-                const response = await fetch(`https://severe-weather.netlify.app/.netlify/functions/weather?${query.toString()}`);
-                const data = await response.json();
-                console.log(data);
+              try {
+            const response = await fetch(`https://severe-weather.netlify.app/.netlify/functions/weather?${query.toString()}`);
+            const data = await response.json();
 
+            // Make sure the data object is properly received and contains the expected properties
+            if (data && data.Property && data.sqft && data.historyCount && data.riskLevel && data['event.date1'] && data['event.weatherType1'] && data['event.magnitude1'] && data['event.icon1']) {
                 const resultContainer = document.getElementById('resultContainer');
                 resultContainer.innerHTML = `
                     <h2>Roof Damage Report for ${data.Property}</h2>
-                    <h3>Square Feet: ${data.Sqft}</h3>
+                    <h3>Square Feet: ${data.sqft}</h3>
                     <p>Number of Severe Storms: ${data.historyCount}</p>
                     <p><img src="https://img1.niftyimages.com/gb/5xnr/ebnr?val=${data.riskLevel}"></p>
-                    <p>Risk Factor: ${data.riskFactor}</p>
-                    <p>Date: ${data["event.date1"]}</p>
-                    <p>Type: ${data["event.weatherType1"]}</p>
-                    <p>Magnitude: ${data["event.magnitude1"]}</p>
-                    <p><img src="${data["event.icon1"]}" alt="icon"></p>
+                    <p>Risk Factor: ${data.riskLevel}</p>
+                    <p>Date: ${data['event.date1']}</p>
+                    <p>Type: ${data['event.weatherType1']}</p>
+                    <p>Magnitude: ${data['event.magnitude1']}</p>
+                    <p><img src="${data['event.icon1']}" alt="icon"></p>
                 `;
-
-                const geojsonData = data.Geojson; // Assuming data.Geojson is already a parsed JavaScript object
-                const centroidData = data.Centroid; // Assuming data.Centroid is already a parsed JavaScript object
-                const centroidCoordinates = centroidData.coordinates;
-                const centroidLatLng = { lat: centroidCoordinates[1], lng: centroidCoordinates[0] };
-
-                // Create a new map centered at the centroid
-                const map = new google.maps.Map(document.getElementById("map"), {
-                    center: centroidLatLng,
-                    zoom: 18, // You can adjust the zoom level to fit the polygon
-                });
-
-                // Convert the GeoJSON data to a Google Maps Polygon
-                const polygon = new google.maps.Polygon({
-                    paths: geojsonData.coordinates,
-                    strokeColor: "#FF0000",
-                    strokeOpacity: 0.8,
-                    strokeWeight: 2,
-                    fillColor: "#FF0000",
-                    fillOpacity: 0.35,
-                });
-
-                // Set the polygon on the map
-                polygon.setMap(map);
-
-                // Mark the centroid as a marker on the map
-                const marker = new google.maps.Marker({
-                    position: centroidLatLng,
-                    map: map,
-                    title: "Roof Centroid",
-                });
-
-                // Hide the loading message once the processing is complete
-                loadingMessage.style.display = 'none';
-            } catch (error) {
-                console.error('Error fetching weather data:', error);
-                // Display an error message on the HTML page in case of an error
-                const resultContainer = document.getElementById('resultContainer');
-                resultContainer.innerHTML = '<p>An error occurred while fetching weather data. Please try again later.</p>';
-                // Hide the loading message in case of an error
-                loadingMessage.style.display = 'none';
+            } else {
+                // If the expected properties are not available, show an error message
+                throw new Error('Invalid data received from the server.');
             }
-        });
+        } catch (error) {
+            console.error('Error fetching weather data:', error);
+            // Display an error message on the HTML page in case of an error
+            const resultContainer = document.getElementById('resultContainer');
+            resultContainer.innerHTML = '<p>An error occurred while fetching weather data. Please try again later.</p>';
+        } finally {
+            // Hide the loading message once the processing is complete
+            loadingMessage.style.display = 'none';
+        }
+    });
     </script>
 </body>
 </html>
