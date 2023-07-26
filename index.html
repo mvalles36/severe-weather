@@ -137,25 +137,26 @@ const [lng, lat] = coordinates;
 
 // Build the GeoJSON feature for the polygon
 const geojsonFeature = {
-    type: 'Feature',
-    properties: {},
-    geometry: data.Geojson,
-};
+        type: "Feature",
+        properties: {},
+        geometry: data.Geojson,
+      };
 
-// Convert the GeoJSON feature to a URL-encoded string
-const geojsonString = encodeURIComponent(JSON.stringify(geojsonFeature));
+      // Convert the GeoJSON feature to a URL-encoded string
+      const geojsonString = encodeURIComponent(JSON.stringify(geojsonFeature));
 
-// Create the URL for the Google static map with the polygon overlay
-const mapImage = `https://api.mapbox.com/styles/v1/mapbox/satellite-v9/static/path-5+f44-0.5(${geojsonString})/${lng},${lat},14,0,0/${mapWidth}x${mapHeight}?access_token=${mapboxAccessToken}`;
-// Display the map with the polygon overlay
-mapContainer.innerHTML = `<img src="${mapImage}" alt="Map with Polygon Overlay">`;
+      // Create the URL for the Google static map with the polygon overlay
+      const mapImage = `https://api.mapbox.com/styles/v1/mapbox/satellite-v9/static/path-5+f44-0.5(${geojsonString})/${lng},${lat},14,0,0/${mapWidth}x${mapHeight}?access_token=${mapboxAccessToken}`;
 
-
-} catch (error) {
-    console.error('Error fetching weather data:', error);
-    const resultContainer = document.getElementById('resultContainer');
-    resultContainer.innerHTML = '<p>An error occurred while fetching weather data. Please try again later.</p>';
-}
+      // Display the map with the polygon overlay
+      mapContainer.innerHTML = `<img src="${mapImage}" alt="Map with Polygon Overlay">`;
+    } catch (error) {
+      console.error("Error fetching weather data:", error);
+      const resultContainer = document.getElementById("resultContainer");
+      resultContainer.innerHTML =
+        "<p>An error occurred while fetching weather data. Please try again later.</p>";
+    }
+  });
 
     </script>
 </body>
