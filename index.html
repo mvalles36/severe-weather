@@ -76,40 +76,57 @@
   // Rest of the code...
 </script>
 
+<div id="loadingMessage" style="display: none;">Submitting form, please wait...</div>
+
         <div id="resultContainer"></div>
 
 <script>
-    document.getElementById("weatherForm").addEventListener("submit", async function(event) {
-      event.preventDefault();
-      const form = event.target;
-      const formData = new FormData(form);
+   document.getElementById("weatherForm").addEventListener("submit", async function(event) {
+  event.preventDefault();
+  const form = event.target;
+  const formData = new FormData(form);
 
-      // Remove the encodeURIComponent call from here
-      const address = formData.get("address");
-      const query = new URLSearchParams(formData);
-      query.set("address", address);
+  // Show loading message
+  const loadingMessage = document.getElementById('loadingMessage');
+  loadingMessage.style.display = 'block';
 
-      const response = await fetch(`https://severe-weather.netlify.app/.netlify/functions/weather?${query.toString()}`);
-      const data = await response.json();
-      console.log(data);
+  // Remove the encodeURIComponent call from here
+  const address = formData.get("address");
+  const query = new URLSearchParams(formData);
+  query.set("address", address);
 
-      const resultContainer = document.getElementById('resultContainer');
-      resultContainer.innerHTML = `
-        <h2>Weather Report for ${data.Property}</h2>
-        <p>First Name: ${data.firstName}</p>
-        <p>Last Name: ${data.lastName}</p>
-        <p>Email: ${data.email}</p>
-        <p>Property: ${data.Property}</p>
-        <p>History Count: ${data.historyCount}</p>
-        <p>Risk Factor: ${data.riskFactor}</p>
-        <p>Risk Level: ${data.riskLevel}</p>
-        <img src="${data.mapImage}" alt="Map Image">
-        <p>Date: ${data["event.date1"]}</p>
-        <p>Type: ${data["event.weatherType1"]}</p>
-        <p>Magnitude: ${data["event.magnitude1"]}</p>
-        <p><img src="${data["event.icon1"]}" alt="icon"></p>               
-      `;
-    });
+  try {
+    const response = await fetch(`https://severe-weather.netlify.app/.netlify/functions/weather?${query.toString()}`);
+    const data = await response.json();
+    console.log(data);
+
+    const resultContainer = document.getElementById('resultContainer');
+    resultContainer.innerHTML = `
+      <h2>Weather Report for ${data.Property}</h2>
+      <p>First Name: ${data.firstName}</p>
+      <p>Last Name: ${data.lastName}</p>
+      <p>Email: ${data.email}</p>
+      <p>Property: ${data.Property}</p>
+      <p>History Count: ${data.historyCount}</p>
+      <p>Risk Factor: ${data.riskFactor}</p>
+      <p>Risk Level: ${data.riskLevel}</p>
+      <img src="${data.mapImage}" alt="Map Image">
+      <p>Date: ${data["event.date1"]}</p>
+      <p>Type: ${data["event.weatherType1"]}</p>
+      <p>Magnitude: ${data["event.magnitude1"]}</p>
+      <p><img src="${data["event.icon1"]}" alt="icon"></p>                
+    `;
+  } catch (error) {
+    console.error('Error fetching weather data:', error);
+    // Display an error message on the HTML page in case of an error
+    const resultContainer = document.getElementById('resultContainer');
+    resultContainer.innerHTML = '<p>An error occurred while fetching weather data. Please try again later.</p>';
+  } finally {
+    // Hide the loading message once the processing is complete
+    loadingMessage.style.display = 'none';
+  }
+});
+
 </script>
 
     </body>
