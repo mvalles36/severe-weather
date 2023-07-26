@@ -15,24 +15,24 @@
     
 <body>
     <h1>Roof Report</h1>
-     <div id="formContainer">
-    <form id="weatherForm">
-        <input type="hidden" id="lat" name="lat" value="">
-        <input type="hidden" id="lng" name="lng" value="">
-        <label for="firstName">First Name:</label>
-        <input type="text" id="firstName" name="firstName" required><br>
-        <label for="lastName">Last Name:</label>
-        <input type="text" id="lastName" name="lastName" required><br>
-        <label for="email">Email:</label>
-        <input type="email" id="email" name="email" required><br>
-        <label for="address">Address:</label>
-        <input type="text" id="address" name="address" required autocomplete="off">
-        <button type="submit">Submit</button>
-    </form>
-     </div>
-   <div id="loadingMessage" style="display: none;">Accessing Satellite Data, please wait...</div>
-   <div id="eventContainer"></div>
-   <div id="map"></div>
+    <div id="formContainer">
+        <form id="weatherForm">
+            <input type="hidden" id="lat" name="lat" value="">
+            <input type="hidden" id="lng" name="lng" value="">
+            <label for="firstName">First Name:</label>
+            <input type="text" id="firstName" name="firstName" required><br>
+            <label for="lastName">Last Name:</label>
+            <input type="text" id="lastName" name="lastName" required><br>
+            <label for="email">Email:</label>
+            <input type="email" id="email" name="email" required><br>
+            <label for="address">Address:</label>
+            <input type="text" id="address" name="address" required autocomplete="off">
+            <button type="submit">Submit</button>
+        </form>
+    </div>
+    <div id="loadingMessage" style="display: none;">Accessing Satellite Data, please wait...</div>
+    <div id="eventContainer"></div>
+    <div id="map"></div>
 
     <script>
         function initAutocomplete() {
@@ -87,16 +87,12 @@
         }
     </script>
 
-    <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyAS72566eF3MF9HZ3HhUq4tuflB-0iJibE&libraries=places&callback=initAutocomplete" async defer></script>
-    <script src="https://api.mapbox.com/mapbox-gl-js/v2.15.0/mapbox-gl.js"></script>
-
     <script>
         document.getElementById("weatherForm").addEventListener("submit", async function(event) {
             event.preventDefault();
             const form = event.target;
             const formData = new FormData(form);
 
-            // Show loading message
             const loadingMessage = document.getElementById('loadingMessage');
             loadingMessage.style.display = 'block';
 
@@ -106,13 +102,14 @@
 
             try {
                 const response = await fetch(`https://severe-weather.netlify.app/.netlify/functions/weather?${query.toString()}`);
+                if (!response.ok) {
+                    throw new Error('Network response was not ok');
+                }
                 const data = await response.json();
 
-                // Parse Centroid and Geojson strings back to JavaScript objects
                 data.Centroid = JSON.parse(data.Centroid);
                 data.Geojson = JSON.parse(data.Geojson);
 
-                // Access the weather events and display them in the HTML
                 const eventContainer = document.getElementById('eventContainer');
                 eventContainer.innerHTML = '';
 
@@ -138,12 +135,11 @@
                 mapboxgl.accessToken = 'pk.eyJ1Ijoicm9vZmxlZGV2ZWxvcGVyIiwiYSI6ImNrOGttMm4zbDAzOXMzbG8wcTZneDl1cXkifQ.SW133g8JQOfR8Rc2y7QZPQ';
                 const map = new mapboxgl.Map({
                     container: 'map',
-                    style: 'mapbox://styles/mapbox/satellite-v9',
-                    center: [data.Centroid.coordinates[0], data.Centroid.coordinates[1]], // Use the coordinates from the Centroid object
+                    style: 'mapbox://styles/mapbox/satellite-v9', // Change to satellite view
+                    center: [data.Centroid.coordinates[0], data.Centroid.coordinates[1]], // Remove square brackets here
                     zoom: 20 // Adjust the zoom level as needed
                 });
 
-                // Extract the centroid and geojson from the data object
                 const centroid = data.Centroid;
                 const geojson = data.Geojson;
                 const coordinates = data.Geojson.coordinates[0];
@@ -171,9 +167,7 @@
                     const bounds = coordinates.reduce((bounds, coord) => bounds.extend(coord), new mapboxgl.LngLatBounds(coordinates[0], coordinates[0]));
                     map.fitBounds(bounds, { padding: 20 });
 
-                    // Hide loading message
-                    loadingMessage.style.display = 'none';
-                });
+                   loadingMessage.style.display = 'none';
             } catch (error) {
                 console.error('Error:', error);
                 loadingMessage.style.display = 'none';
@@ -181,5 +175,7 @@
             }
         });
     </script>
+    <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyAS72566eF3MF9HZ3HhUq4tuflB-0iJibE&libraries=places&callback=initAutocomplete" async defer></script>
+    <script src="https://api.mapbox.com/mapbox-gl-js/v2.15.0/mapbox-gl.js"></script>
 </body>
 </html>
