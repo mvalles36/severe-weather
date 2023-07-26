@@ -128,7 +128,6 @@
                             <p>Magnitude: ${magnitude}</p>
                             <img src="${iconUrl}" alt="icon">
                         `;
-                        eventContainer.appendChild(eventElement);
                     }
                 }
 
@@ -143,6 +142,9 @@
                 const centroid = data.Centroid;
                 const geojson = data.Geojson;
                 const coordinates = data.Geojson.coordinates[0];
+
+                const eventContainer = document.getElementById('eventContainer');
+                eventContainer.innerHTML = '';
 
                 map.on('load', () => {
                     // Add a data source containing GeoJSON data.
