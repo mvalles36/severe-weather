@@ -82,7 +82,12 @@
                 lngInput.value = lng;
             });
         }
-    
+    </script>
+
+    <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyAS72566eF3MF9HZ3HhUq4tuflB-0iJibE&libraries=places&callback=initAutocomplete" async defer></script>
+    <script src="https://api.mapbox.com/mapbox-gl-js/v2.15.0/mapbox-gl.js"></script>
+
+    <script>
         document.getElementById("weatherForm").addEventListener("submit", async function(event) {
             event.preventDefault();
             const form = event.target;
@@ -97,74 +102,81 @@
             query.set("address", address);
 
             try {
-    const response = await fetch(`https://severe-weather.netlify.app/.netlify/functions/weather?${query.toString()}`);
-    const data = await response.json();
+                const response = await fetch(`https://severe-weather.netlify.app/.netlify/functions/weather?${query.toString()}`);
+                const data = await response.json();
 
-    // Parse Centroid and Geojson strings back to JavaScript objects
-    data.Centroid = JSON.parse(data.Centroid);
-    data.Geojson = JSON.parse(data.Geojson);
+                // Parse Centroid and Geojson strings back to JavaScript objects
+                data.Centroid = JSON.parse(data.Centroid);
+                data.Geojson = JSON.parse(data.Geojson);
 
-    // Access the weather events and display them in the HTML
-    const eventContainer = document.getElementById('eventContainer');
-    eventContainer.innerHTML = '';
+                // Access the weather events and display them in the HTML
+                const eventContainer = document.getElementById('eventContainer');
+                eventContainer.innerHTML = '';
 
-    for (let i = 1; i <= 10; i++) {
-        const eventDate = data[`event.date${i}`];
-        const weatherType = data[`event.weatherType${i}`];
-        const magnitude = data[`event.magnitude${i}`];
-        const iconUrl = data[`event.icon${i}`];
+                for (let i = 1; i <= 10; i++) {
+                    const eventDate = data[`event.date${i}`];
+                    const weatherType = data[`event.weatherType${i}`];
+                    const magnitude = data[`event.magnitude${i}`];
+                    const iconUrl = data[`event.icon${i}`];
 
-        if (eventDate && weatherType && magnitude && iconUrl) {
-            const eventElement = document.createElement('div');
-            eventElement.innerHTML = `
-                <h3>Weather Event ${i}</h3>
-                <p>Date: ${eventDate}</p>
-                <p>Type: ${weatherType}</p>
-                <p>Magnitude: ${magnitude}</p>
-                <img src="${iconUrl}" alt="icon">
-            `;
-            eventContainer.appendChild(eventElement);
-        }
-    }
-    mapboxgl.accessToken = 'pk.eyJ1Ijoicm9vZmxlZGV2ZWxvcGVyIiwiYSI6ImNrOGttMm4zbDAzOXMzbG8wcTZneDl1cXkifQ.SW133g8JQOfR8Rc2y7QZPQ';
-    const map = new mapboxgl.Map({
-      container: 'map',
-      style: 'mapbox://styles/mapbox/light-v10',
-      center: [${data.Centroid.coordinates[0]}, ${data.Centroid.coordinates[1]}], // Use the coordinates from the Centroid object
-      zoom: 20 // Adjust the zoom level as needed
-    });
+                    if (eventDate && weatherType && magnitude && iconUrl) {
+                        const eventElement = document.createElement('div');
+                        eventElement.innerHTML = `
+                            <h3>Weather Event ${i}</h3>
+                            <p>Date: ${eventDate}</p>
+                            <p>Type: ${weatherType}</p>
+                            <p>Magnitude: ${magnitude}</p>
+                            <img src="${iconUrl}" alt="icon">
+                        `;
+                        eventContainer.appendChild(eventElement);
+                    }
+                }
 
-    // Extract the centroid and geojson from the data object
-    const centroid = ${data.Centroid};
-    const geojson = ${data.Geojson};
-    const coordinates = ${data.Geojson}.coordinates[0];
+                mapboxgl.accessToken = 'pk.eyJ1Ijoicm9vZmxlZGV2ZWxvcGVyIiwiYSI6ImNrOGttMm4zbDAzOXMzbG8wcTZneDl1cXkifQ.SW133g8JQOfR8Rc2y7QZPQ';
+                const map = new mapboxgl.Map({
+                    container: 'map',
+                    style: 'mapbox://styles/mapbox/light-v10',
+                    center: [data.Centroid.coordinates[0], data.Centroid.coordinates[1]], // Use the coordinates from the Centroid object
+                    zoom: 20 // Adjust the zoom level as needed
+                });
 
-    map.on('load', () => {
-      // Add a data source containing GeoJSON data.
-      map.addSource('roof', {
-        type: 'geojson',
-        data: geojson
-      });
+                // Extract the centroid and geojson from the data object
+                const centroid = data.Centroid;
+                const geojson = data.Geojson;
+                const coordinates = data.Geojson.coordinates[0];
 
-      // Add a new layer to visualize the polygon.
-      map.addLayer({
-        id: 'roof',
-        type: 'fill',
-        source: 'roof', // reference the data source
-        layout: {},
-        paint: {
-          'fill-color': '#ff0000', // red color fill (customize color as needed)
-          'fill-opacity': 0.5 // adjust opacity as needed
-        }
-      });
+                map.on('load', () => {
+                    // Add a data source containing GeoJSON data.
+                    map.addSource('roof', {
+                        type: 'geojson',
+                        data: geojson
+                    });
 
-      // Fit the map to the polygon's bounds
-      const bounds = coordinates.reduce((bounds, coord) => bounds.extend(coord), new mapboxgl.LngLatBounds(coordinates[0], coordinates[0]));
-      map.fitBounds(bounds, { padding: 20 });
-    });
+                    // Add a new layer to visualize the polygon.
+                    map.addLayer({
+                        id: 'roof',
+                        type: 'fill',
+                        source: 'roof', // reference the data source
+                        layout: {},
+                        paint: {
+                            'fill-color': '#ff0000', // red color fill (customize color as needed)
+                            'fill-opacity': 0.5 // adjust opacity as needed
+                        }
+                    });
+
+                    // Fit the map to the polygon's bounds
+                    const bounds = coordinates.reduce((bounds, coord) => bounds.extend(coord), new mapboxgl.LngLatBounds(coordinates[0], coordinates[0]));
+                    map.fitBounds(bounds, { padding: 20 });
+
+                    // Hide loading message
+                    loadingMessage.style.display = 'none';
+                });
+            } catch (error) {
+                console.error('Error:', error);
+                loadingMessage.style.display = 'none';
+                eventContainer.innerHTML = '<p>Error fetching weather data.</p>';
+            }
+        });
     </script>
-     <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyAS72566eF3MF9HZ3HhUq4tuflB-0iJibE&libraries=places&callback=initAutocomplete" async defer></script>
-    <script src="https://api.mapbox.com/mapbox-gl-js/v2.15.0/mapbox-gl.js"></script>
-
 </body>
 </html>
