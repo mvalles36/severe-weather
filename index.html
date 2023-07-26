@@ -88,7 +88,7 @@
         }
     </script>
 
-   <script>
+  <script>
     document.getElementById("weatherForm").addEventListener("submit", async function(event) {
         event.preventDefault();
         const form = event.target;
@@ -172,11 +172,12 @@
                 submissionMessage.style.display = 'block';
                 form.style.display = 'none'; // Hide the form after submission
             } catch (error) {
-                console.error('Error:', error);
-                loadingMessage.style.display = 'none';
-                eventContainer.innerHTML = '<p>Error fetching weather data.</p>';
-            }
-        });
+            console.error('Error:', error);
+            loadingMessage.style.display = 'none';
+            eventContainer.innerHTML = '<p>Error fetching weather data.</p>';
+        }
+    });
+</script>
 </script>
 
 
