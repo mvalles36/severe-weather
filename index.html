@@ -4,11 +4,11 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Weather Report Form</title>
-  <style>
+    <style>
         body { margin: 0; padding: 0; }
-        #map { position: absolute; top: 0; bottom: 0; width: 100%; height: 500px; z-index: 1; } /* Set map height and z-index */
-        #formContainer { position: relative; z-index: 2; background-color: white; padding: 20px; } /* Set z-index and styling for the form container */
-        h1, h2 { position: relative; z-index: 2; } /* Set z-index for headings */
+        #map { position: absolute; top: 0; bottom: 0; width: 100%; height: 500px; z-index: 1; }
+        #formContainer { position: relative; z-index: 2; background-color: white; padding: 20px; }
+        h1, h2 { position: relative; z-index: 2; }
         #submissionMessage { display: none; position: relative; z-index: 2; background-color: #e0f7f1; padding: 10px; margin-top: 20px; }
     </style>
     <link href="https://api.mapbox.com/mapbox-gl-js/v2.15.0/mapbox-gl.css" rel="stylesheet">
@@ -44,18 +44,14 @@
             // Initialize Google Places Autocomplete
             const autocomplete = new google.maps.places.Autocomplete(addressInput, {
                 types: ["geocode"],
-                componentRestrictions: { country: "us" }, // Restrict results to the United States
+                componentRestrictions: { country: "us" },
             });
 
-            // Add a listener for the "place_changed" event to get the selected place
             autocomplete.addListener("place_changed", function() {
                 const place = autocomplete.getPlace();
-
-                // Extract latitude and longitude from the selected place
                 const lat = place.geometry.location.lat();
                 const lng = place.geometry.location.lng();
 
-                // Extract address components from the selected place
                 const addressComponents = place.address_components;
                 let street = '';
                 let city = '';
@@ -77,18 +73,16 @@
                     }
                 }
 
-                // Combine the address components to form the desired address format
                 const formattedAddress = `${street}, ${city}, ${state}, ${zipcode}`;
 
-                // Set the formatted address and lat/lng as the values of the corresponding input fields
                 addressInput.value = formattedAddress;
                 latInput.value = lat;
                 lngInput.value = lng;
             });
         }
     </script>
-    
- <script>
+
+    <script>
     document.getElementById("weatherForm").addEventListener("submit", async function(event) {
         event.preventDefault();
         const form = event.target;
@@ -136,9 +130,9 @@
             mapboxgl.accessToken = 'pk.eyJ1Ijoicm9vZmxlZGV2ZWxvcGVyIiwiYSI6ImNrOGttMm4zbDAzOXMzbG8wcTZneDl1cXkifQ.SW133g8JQOfR8Rc2y7QZPQ';
             const map = new mapboxgl.Map({
                 container: 'map',
-                style: 'mapbox://styles/mapbox/satellite-v9', // Change to satellite view
-                center: [data.Centroid.coordinates[0], data.Centroid.coordinates[1]], // Remove square brackets here
-                zoom: 20 // Adjust the zoom level as needed
+                style: 'mapbox://styles/mapbox/satellite-v9',
+                center: [data.Centroid.coordinates[0], data.Centroid.coordinates[1]],
+                zoom: 20
             });
 
             const centroid = data.Centroid;
@@ -146,31 +140,28 @@
             const coordinates = data.Geojson.coordinates[0];
 
             map.on('load', () => {
-                // Add a data source containing GeoJSON data.
                 map.addSource('roof', {
                     type: 'geojson',
                     data: geojson
                 });
 
-                // Add a new layer to visualize the polygon.
                 map.addLayer({
                     id: 'roof',
                     type: 'fill',
-                    source: 'roof', // reference the data source
+                    source: 'roof',
                     layout: {},
                     paint: {
-                        'fill-color': '#ff0000', // red color fill (customize color as needed)
-                        'fill-opacity': 0.5 // adjust opacity as needed
+                        'fill-color': '#ff0000',
+                        'fill-opacity': 0.5
                     }
                 });
 
-                // Fit the map to the polygon's bounds
                 const bounds = coordinates.reduce((bounds, coord) => bounds.extend(coord), new mapboxgl.LngLatBounds(coordinates[0], coordinates[0]));
                 map.fitBounds(bounds, { padding: 20 });
 
                 const submissionMessage = document.getElementById('submissionMessage');
                 submissionMessage.style.display = 'block';
-                form.style.display = 'none'; // Hide the form after submission
+                form.style.display = 'none';
             });
         } catch (error) {
             console.error('Error:', error);
@@ -178,10 +169,9 @@
             eventContainer.innerHTML = '<p>Error fetching weather data.</p>';
         }
     });
-</script>
+    </script>
 
-
-    <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyAS72566eF3MF9HZ3HhUq4tuflB-0iJibE&libraries=places&callback=initAutocomplete" async defer></script>
+    <script src="https://maps.googleapis.com/maps/api/js?key=YOUR_GOOGLE_MAPS_API_KEY&libraries=places&callback=initAutocomplete" async defer></script>
     <script src="https://api.mapbox.com/mapbox-gl-js/v2.15.0/mapbox-gl.js"></script>
 </body>
 </html>
