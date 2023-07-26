@@ -88,7 +88,7 @@
         }
     </script>
     
-   <script>
+  <script>
     document.getElementById("weatherForm").addEventListener("submit", async function(event) {
         event.preventDefault();
         const form = event.target;
@@ -168,10 +168,11 @@
                 const bounds = coordinates.reduce((bounds, coord) => bounds.extend(coord), new mapboxgl.LngLatBounds(coordinates[0], coordinates[0]));
                 map.fitBounds(bounds, { padding: 20 });
 
-               const submissionMessage = document.getElementById('submissionMessage');
+                const submissionMessage = document.getElementById('submissionMessage');
                 submissionMessage.style.display = 'block';
                 form.style.display = 'none'; // Hide the form after submission
-            } catch (error) {
+            }
+        } catch (error) {
             console.error('Error:', error);
             loadingMessage.style.display = 'none';
             eventContainer.innerHTML = '<p>Error fetching weather data.</p>';
