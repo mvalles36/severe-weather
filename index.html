@@ -104,10 +104,10 @@
         <p>Risk Factor: ${data.riskFactor}</p>
         <p>Risk Level: ${data.riskLevel}</p>
         <img src="${data.mapImage}" alt="Map Image">
-        <p>Date: ${data.event.date1}</p>
-        <p>Type: ${data.event.weatherType1}</p>
-        <p>Magnitude: ${data.event.magnitude1}</p>
-        <p><img src="${data.event.icon1}" alt="icon"></p>                
+        <p>Date: ${data.events['event.date1']}</p>
+        <p>Type: ${data.events['event.weatherType1']}</p>
+        <p>Magnitude: ${data.events['event.magnitude1'}</p>
+        <p><img src="${data.events['event.icon1']}" alt="icon"></p>                
       `;
     });
 </script>
