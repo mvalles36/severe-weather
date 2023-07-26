@@ -116,8 +116,8 @@
                     <p><img src="${data["event.icon1"]}" alt="icon"></p>
                 `;
 
-                const geojsonData = ${data.geojson}; // Assuming data.geojson is already a parsed JavaScript object
-                const centroidData = ${data.centroid}; // Assuming data.centroid is already a parsed JavaScript object
+                const geojsonData = data.Geojson; // Assuming data.Geojson is already a parsed JavaScript object
+                const centroidData = data.Centroid; // Assuming data.Centroid is already a parsed JavaScript object
                 const centroidCoordinates = centroidData.coordinates;
                 const centroidLatLng = { lat: centroidCoordinates[1], lng: centroidCoordinates[0] };
 
