@@ -79,10 +79,10 @@ $('.results-list .item').each((index, element) => {
                               icon = 'https://severe-weather.netlify.app/functions/icons/icon-wind.png';
                               }
                               
-                              events[`event.date ${index + 1}`] = date;
-                              events[`event.weatherType ${index + 1}`] = weatherType;
-                              events[`event.magnitude ${index + 1}`] = magnitude;
-                              events[`event.icon ${index + 1}`] = icon;
+                              events[`event.date${index + 1}`] = date;
+                              events[`event.weatherType${index + 1}`] = weatherType;
+                              events[`event.magnitude${index + 1}`] = magnitude;
+                              events[`event.icon${index + 1}`] = icon;
                               });
 
 const result = {
