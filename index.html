@@ -10,7 +10,7 @@
         #formContainer { position: relative; z-index: 2; background-color: white; padding: 20px; }
         h1, h2 { position: relative; z-index: 2; }
         #submissionMessage { display: none; position: relative; z-index: 2; background-color: #e0f7f1; padding: 10px; margin-top: 20px; }
-        .weather-icon {width: 50px; height: 50px;}
+        .weather-icon {width: 40px; height: 40px;}
     </style>
     <link href="https://api.mapbox.com/mapbox-gl-js/v2.15.0/mapbox-gl.css" rel="stylesheet">
 </head>
@@ -119,6 +119,8 @@
                 if (eventDate && weatherType && magnitude && iconUrl) {
                     const eventElement = document.createElement('div');
                     eventElement.innerHTML = `
+                        <h1>Property: ${data.address}</h1>
+                        <p><img src="https://img1.niftyimages.com/gb/5xnr/ebnr?val=${data.riskLevel}" /></p>
                         <h3>Weather Event ${i}</h3>
                         <p>Date: ${eventDate}</p>
                         <p>Type: ${weatherType}</p>
