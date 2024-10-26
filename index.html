@@ -6,6 +6,7 @@
     <title>Severe Weather Report</title>
     <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
     <link href="https://api.mapbox.com/mapbox-gl-js/v2.15.0/mapbox-gl.css" rel="stylesheet">
+    <script src="https://api.mapbox.com/mapbox-gl-js/v2.15.0/mapbox-gl.js"></script>
     <style>
         .gradient-bg {
             background: linear-gradient(120deg, #a1c4fd 0%, #c2e9fb 100%);
@@ -17,7 +18,7 @@
         }
         .weather-card {
             backdrop-filter: blur(10px);
-            background-color: rgba(255, 255, 255, 0.8);
+            background-color: rgba(255, 255, 255, 0.9);
             transition: transform 0.2s;
         }
         .weather-card:hover {
@@ -32,14 +33,22 @@
             height: 50px;
             filter: drop-shadow(2px 2px 4px rgba(0, 0, 0, 0.2));
         }
+        .risk-indicator {
+            transition: all 0.3s ease;
+        }
+        .event-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 1.5rem;
+        }
     </style>
 </head>
 <body class="gradient-bg min-h-screen">
     <div class="container mx-auto px-4 py-8">
         <!-- Header -->
         <header class="text-center mb-12">
-            <h1 class="text-4xl font-bold text-gray-800 mb-2">Severe Weather Report</h1>
-            <p class="text-gray-600">Get detailed weather history and risk assessment for any US address</p>
+            <h1 class="text-4xl font-bold text-gray-800 mb-2">Severe Weather Data</h1>
+            <p class="text-gray-600"Assess the risk of any roof in the US based on severe weather events</p>
         </header>
 
         <!-- Search Form -->
@@ -65,28 +74,41 @@
         <div id="loadingMessage" class="hidden fixed inset-0 loading-overlay flex items-center justify-center z-50">
             <div class="text-center">
                 <div class="animate-spin rounded-full h-16 w-16 border-b-2 border-blue-600 mb-4"></div>
-                <p class="text-lg text-gray-800">Analyzing location data...</p>
-            </div>
+                <p class="text-lg text-gray-800">Accessing Rooftop Images...</p>
+                <p class="text-lg text-gray-800">Analyzing severe weather events...</p> 
+                <p class="text-lg text-gray-800">Calculating Risk for Damage...</p>            </div>
         </div>
 
         <!-- Results Container -->
-        <div id="resultsContainer" class="hidden">
+        <div id="resultsContainer" class="hidden space-y-8">
+            <!-- Property Info -->
+            <div id="propertyInfo" class="bg-white rounded-lg shadow-lg p-6">
+                <h2 class="text-2xl font-bold text-gray-800 mb-4">Property Details</h2>
+                <div id="propertyDetails" class="space-y-2">
+                    <!-- Property details will be inserted here -->
+                </div>
+            </div>
+
             <!-- Risk Level Banner -->
-            <div id="riskBanner" class="mb-8 text-center">
-                <h2 class="text-2xl font-bold mb-2">Property Risk Assessment</h2>
-                <div id="riskIndicator" class="max-w-md mx-auto bg-white rounded-lg p-4 shadow-lg">
+            <div class="bg-white rounded-lg shadow-lg p-6">
+                <h2 class="text-2xl font-bold text-gray-800 mb-4">Risk Assessment</h2>
+                <div id="riskIndicator" class="max-w-md mx-auto">
                     <!-- Risk level image will be inserted here -->
                 </div>
             </div>
 
             <!-- Map Container -->
-            <div class="mb-8 shadow-lg rounded-lg overflow-hidden">
-                <div id="map"></div>
+            <div class="bg-white rounded-lg shadow-lg p-6">
+                <h2 class="text-2xl font-bold text-gray-800 mb-4">Property Location</h2>
+                <div id="map" class="rounded-lg shadow"></div>
             </div>
 
-            <!-- Weather Events Grid -->
-            <div id="eventContainer" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                <!-- Weather event cards will be inserted here -->
+            <!-- Weather Events -->
+            <div class="bg-white rounded-lg shadow-lg p-6">
+                <h2 class="text-2xl font-bold text-gray-800 mb-4">Weather History</h2>
+                <div id="eventContainer" class="event-grid">
+                    <!-- Weather event cards will be inserted here -->
+                </div>
             </div>
         </div>
     </div>
@@ -116,6 +138,7 @@
             
             const loadingMessage = document.getElementById('loadingMessage');
             const resultsContainer = document.getElementById('resultsContainer');
+            const propertyDetails = document.getElementById('propertyDetails');
             const eventContainer = document.getElementById('eventContainer');
             
             loadingMessage.classList.remove('hidden');
@@ -130,12 +153,20 @@
                 if (!response.ok) throw new Error('Network response was not ok');
                 const data = await response.json();
 
-                // Parse JSON strings
-                data.Centroid = JSON.parse(data.Centroid);
-                data.Geojson = JSON.parse(data.Geojson);
+                // Parse the double-encoded JSON strings
+                const centroid = JSON.parse(JSON.parse(data.Centroid));
+                const geojson = JSON.parse(JSON.parse(data.Geojson));
 
                 // Show results container
                 resultsContainer.classList.remove('hidden');
+
+                // Update property details
+                propertyDetails.innerHTML = `
+                    <p class="text-lg"><span class="font-semibold">Address:</span> ${data.property}</p>
+                    <p class="text-lg"><span class="font-semibold">Roof Size:</span> ${Math.round(data.Sqft)} sq ft</p>
+                    <p class="text-lg"><span class="font-semibold">Weather Events:</span> ${data.historyCount} recorded incidents</p>
+                    <p class="text-lg"><span class="font-semibold">Risk Factor:</span> ${data.riskFactor}</p>
+                `;
 
                 // Update risk indicator
                 const riskIndicator = document.getElementById('riskIndicator');
@@ -146,6 +177,7 @@
                 `;
 
                 // Create event cards
+                eventContainer.innerHTML = '';
                 for (let i = 1; i <= 10; i++) {
                     const eventDate = data[`event.date${i}`];
                     const weatherType = data[`event.weatherType${i}`];
@@ -178,15 +210,14 @@
                 const map = new mapboxgl.Map({
                     container: 'map',
                     style: 'mapbox://styles/mapbox/satellite-v9',
-                    center: [data.Centroid.coordinates[0], data.Centroid.coordinates[1]],
+                    center: centroid.coordinates,
                     zoom: 19
                 });
 
                 map.on('load', () => {
-                    // Add roof outline
                     map.addSource('roof', {
                         type: 'geojson',
-                        data: data.Geojson
+                        data: geojson
                     });
 
                     map.addLayer({
@@ -201,7 +232,7 @@
                     });
 
                     // Fit map to roof bounds
-                    const coordinates = data.Geojson.coordinates[0];
+                    const coordinates = geojson.coordinates[0];
                     const bounds = coordinates.reduce(
                         (bounds, coord) => bounds.extend(coord),
                         new mapboxgl.LngLatBounds(coordinates[0], coordinates[0])
@@ -211,9 +242,10 @@
 
             } catch (error) {
                 console.error('Error:', error);
-                eventContainer.innerHTML = `
-                    <div class="col-span-full text-center p-8">
-                        <p class="text-red-600">Error fetching weather data. Please try again.</p>
+                resultsContainer.classList.remove('hidden');
+                resultsContainer.innerHTML = `
+                    <div class="bg-white rounded-lg shadow-lg p-6">
+                        <p class="text-red-600 text-center text-lg">Error fetching weather data. Please try again.</p>
                     </div>
                 `;
             } finally {
@@ -222,7 +254,8 @@
         });
     </script>
 
-    <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyCykgTuMkZ32W_EvGnKBSLyGNevfix_QPo&libraries=places&callback=initAutocomplete" async defer></script>
-    <script src="https://api.mapbox.com/mapbox-gl-js/v2.15.0/mapbox-gl.js"></script>
+    <script async defer
+        src="https://maps.googleapis.com/maps/api/js?key=AIzaSyCykgTuMkZ32W_EvGnKBSLyGNevfix_QPo&libraries=places&callback=initAutocomplete">
+    </script>
 </body>
 </html>
