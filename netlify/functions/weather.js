@@ -1,12 +1,26 @@
 const axios = require('axios');
 const cheerio = require('cheerio');
+const qs = require('qs');  // Import the query string parser module
 
 exports.handler = async (event, context) => {
     try {
-        // Parse the request body to get parameters (e.g., address, lat, lng)
-        const { address, lat, lng } = JSON.parse(event.body); // Access parameters from body
+        // Parse form data from the body (application/x-www-form-urlencoded)
+        const body = qs.parse(event.body); // Parse the form data into an object
+        
+        const { address, lat, lng } = body; // Access the parameters from form data
+        
+        if (!address || !lat || !lng) {
+            return {
+                statusCode: 400,
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Access-Control-Allow-Origin': '*'
+                },
+                body: JSON.stringify({ error: 'Address, latitude, and longitude are required.' })
+            };
+        }
 
-        // Fetch weather data from drroof.com
+        // Fetch weather data from drroof.com using POST request
         const weatherUrl = `https://www.drroof.com/ws/retrieve-weather-results?address=${encodeURIComponent(address)}`;
         const weatherResponse = await axios.post(weatherUrl, null, {
             headers: {
