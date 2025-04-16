@@ -3,9 +3,8 @@ const cheerio = require('cheerio');
 
 exports.handler = async (event, context) => {
     try {
-        const { address } = event.queryStringParameters;
-        const lat = event.queryStringParameters.lat;
-        const lng = event.queryStringParameters.lng;
+        // Parse the request body to get parameters (e.g., address, lat, lng)
+        const { address, lat, lng } = JSON.parse(event.body); // Access parameters from body
 
         // Fetch weather data from drroof.com
         const weatherUrl = `https://www.drroof.com/ws/retrieve-weather-results?address=${encodeURIComponent(address)}`;
