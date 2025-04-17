@@ -2,26 +2,45 @@ const axios = require('axios');
 const cheerio = require('cheerio');
 
 exports.handler = async (event) => {
-  try {
-    // Allow only POST
-    if (event.httpMethod !== 'POST') {
-      return {
-        statusCode: 405,
-        body: JSON.stringify({ error: 'Method Not Allowed' }),
-      };
-    }
+  // Handle preflight OPTIONS requests for CORS
+  if (event.httpMethod === 'OPTIONS') {
+    return {
+      statusCode: 200,
+      headers: {
+        'Access-Control-Allow-Origin': '*', // or specify your domain here, e.g. 'https://your-frontend-url.com'
+        'Access-Control-Allow-Methods': 'POST, OPTIONS',
+        'Access-Control-Allow-Headers': 'Content-Type',
+      },
+      body: '',
+    };
+  }
 
-    // Parse request body
-    const { address, lat, lng } = JSON.parse(event.body);
+  // Only accept POST requests
+  if (event.httpMethod !== 'POST') {
+    return {
+      statusCode: 405, // Method Not Allowed
+      headers: {
+        'Access-Control-Allow-Origin': '*', // Allow from any origin (can be restricted to your frontend URL)
+      },
+      body: JSON.stringify({ error: 'Method Not Allowed' }),
+    };
+  }
+
+  try {
+    // Parse the request body to get parameters (address, lat, lng)
+    const { address, lat, lng } = JSON.parse(event.body); 
 
     if (!address || !lat || !lng) {
       return {
-        statusCode: 400,
-        body: JSON.stringify({ error: 'Missing required fields' }),
+        statusCode: 400, // Bad Request
+        headers: {
+          'Access-Control-Allow-Origin': '*',
+        },
+        body: JSON.stringify({ error: 'Missing required fields: address, lat, lng' }),
       };
     }
 
-    // Weather data from drroof
+    // Fetch weather data from drroof.com
     const weatherUrl = `https://www.drroof.com/ws/retrieve-weather-results?address=${encodeURIComponent(address)}`;
     const weatherResponse = await axios.post(weatherUrl, null, {
       headers: {
@@ -38,7 +57,6 @@ exports.handler = async (event) => {
     const riskFactor = $('.loaded-weather-section p:nth-child(3)').text().replace('CURRENT RISK FACTOR:', '').trim();
     const riskLevel = parseFloat($('.loaded-weather-section .tick-arrow').css('left'));
 
-    // Weather events
     const events = [];
     $('.results-list .item').each((index, element) => {
       const date = $(element).find('.media-left b').text().trim();
@@ -47,12 +65,12 @@ exports.handler = async (event) => {
       events.push({ date, weatherType, magnitude });
     });
 
-    // Roof footprint from roofr
+    // Fetch roof footprint data
     const footprintUrl = `https://footprints.roofr.com/footprint/${lat}/${lng}`;
     const footprintResponse = await axios.get(footprintUrl);
     const { centroid, sqft, geojson, distance } = footprintResponse.data.data[0];
 
-    // Final response
+    // Prepare the result object to return
     const result = {
       address,
       property,
@@ -71,22 +89,25 @@ exports.handler = async (event) => {
     };
 
     return {
-      statusCode: 200,
+      statusCode: 200, // OK
       headers: {
         'Content-Type': 'application/json',
-        'Access-Control-Allow-Origin': '*',
+        'Access-Control-Allow-Origin': '*', // Allow from any origin (can be restricted to your frontend URL)
       },
       body: JSON.stringify(result),
     };
   } catch (error) {
     console.error('Weather function error:', error.message);
     return {
-      statusCode: 500,
+      statusCode: 500, // Internal Server Error
       headers: {
         'Content-Type': 'application/json',
         'Access-Control-Allow-Origin': '*',
       },
-      body: JSON.stringify({ error: 'Something went wrong', message: error.message }),
+      body: JSON.stringify({
+        error: 'Something went wrong',
+        message: error.message,
+      }),
     };
   }
 };
