@@ -1,105 +1,102 @@
 const axios = require('axios');
 const cheerio = require('cheerio');
-const qs = require('qs');  // Import the query string parser module
+const qs = require('querystring');
 
 exports.handler = async (event, context) => {
-    try {
-        // Parse form data from the body (application/x-www-form-urlencoded)
-        const body = qs.parse(event.body); // Parse the form data into an object
-        
-        const { address, lat, lng } = body; // Access the parameters from form data
-        
-        if (!address || !lat || !lng) {
-            return {
-                statusCode: 400,
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Access-Control-Allow-Origin': '*'
-                },
-                body: JSON.stringify({ error: 'Address, latitude, and longitude are required.' })
-            };
-        }
-
-        // Fetch weather data from drroof.com using POST request
-        const weatherUrl = `https://www.drroof.com/ws/retrieve-weather-results?address=${encodeURIComponent(address)}`;
-        const weatherResponse = await axios.post(weatherUrl, null, {
-            headers: {
-                'Content-Type': 'application/x-www-form-urlencoded',
-                Cookie: 'ARRAffinity=ebe2790d749702022a54ce9bf5ef49208f8970a38b82360408bfec3955380433; ARRAffinitySameSite=ebe2790d749702022a54ce9bf5ef49208f8970a38b82360408bfec3955380433',
-            },
-        });
-
-        const $ = cheerio.load(weatherResponse.data);
-
-        // Fetch roof footprint data
-        const footprintUrl = `https://footprints.roofr.com/footprint/${lat}/${lng}`;
-        const footprintResponse = await axios.get(footprintUrl);
-        const { centroid, sqft, geojson, distance } = footprintResponse.data.data[0];
-
-        // Parse weather data
-        const property = $('.loaded-weather-section p:nth-child(1)').text().replace('PROPERTY:', '').trim();
-        const historyText = $('.loaded-weather-section p:nth-child(2)').text().trim();
-        const historyCount = historyText.match(/\d+/) ? parseInt(historyText.match(/\d+/)[0]) : null;
-        const riskFactor = $('.loaded-weather-section p:nth-child(3)').text().replace('CURRENT RISK FACTOR:', '').trim();
-        const riskLevel = parseFloat($('.loaded-weather-section .tick-arrow').css('left'));
-
-        // Parse weather events
-        const events = {};
-        $('.results-list .item').each((index, element) => {
-            const date = $(element).find('.media-left b').text().trim();
-            const weatherType = $(element).find('.media-body .bold').text().trim();
-            const magnitude = $(element).find('.media-body').contents().last().text().trim();
-            
-            let icon = '';
-            switch(weatherType.toLowerCase()) {
-                case 'hail':
-                    icon = 'https://severe-weather.netlify.app/netlify/functions/icons/hail.png';
-                    break;
-                case 'wind':
-                    icon = 'https://severe-weather.netlify.app/netlify/functions/icons/wind.png';
-                    break;
-                // Add more weather types as needed
-            }
-            
-            events[`event.date${index + 1}`] = date;
-            events[`event.weatherType${index + 1}`] = weatherType;
-            events[`event.magnitude${index + 1}`] = magnitude;
-            events[`event.icon${index + 1}`] = icon;
-        });
-
-        const result = {
-            address,
-            property,
-            historyCount,
-            riskFactor,
-            riskLevel,
-            Centroid: JSON.stringify(centroid),
-            Sqft: sqft,
-            Geojson: JSON.stringify(geojson),
-            Distance: distance,
-            ...events
-        };
-
-        return {
-            statusCode: 200,
-            headers: {
-                'Content-Type': 'application/json',
-                'Access-Control-Allow-Origin': '*'
-            },
-            body: JSON.stringify(result)
-        };
-    } catch (error) {
-        console.error('Error:', error);
-        return {
-            statusCode: 500,
-            headers: {
-                'Content-Type': 'application/json',
-                'Access-Control-Allow-Origin': '*'
-            },
-            body: JSON.stringify({ 
-                error: 'An error occurred while fetching weather data',
-                message: error.message 
-            })
-        };
+  try {
+    if (event.httpMethod !== 'POST') {
+      return {
+        statusCode: 405,
+        body: JSON.stringify({ error: 'Method Not Allowed' }),
+      };
     }
+
+    // Handle form-urlencoded data (e.g., sent from HTML forms)
+    const contentType = event.headers['content-type'] || event.headers['Content-Type'];
+    let address, lat, lng;
+
+    if (contentType.includes('application/json')) {
+      const body = JSON.parse(event.body);
+      address = body.address;
+      lat = body.lat;
+      lng = body.lng;
+    } else if (contentType.includes('application/x-www-form-urlencoded')) {
+      const parsed = qs.parse(event.body);
+      address = parsed.address;
+      lat = parsed.lat;
+      lng = parsed.lng;
+    } else {
+      return {
+        statusCode: 400,
+        body: JSON.stringify({ error: 'Unsupported content type' }),
+      };
+    }
+
+    // 🛰️ Get weather history from DrRoof
+    const weatherUrl = `https://www.drroof.com/ws/retrieve-weather-results?address=${encodeURIComponent(address)}`;
+    const weatherResponse = await axios.post(weatherUrl, null, {
+      headers: {
+        'Content-Type': 'application/x-www-form-urlencoded',
+        'Cookie': 'ARRAffinity=somevalue; ARRAffinitySameSite=somevalue',
+      },
+    });
+
+    const $ = cheerio.load(weatherResponse.data);
+
+    // 🧠 Parse weather risk & history
+    const property = $('.loaded-weather-section p:nth-child(1)').text().replace('PROPERTY:', '').trim();
+    const historyText = $('.loaded-weather-section p:nth-child(2)').text().trim();
+    const historyCount = historyText.match(/\d+/) ? parseInt(historyText.match(/\d+/)[0]) : 0;
+    const riskFactor = $('.loaded-weather-section p:nth-child(3)').text().replace('CURRENT RISK FACTOR:', '').trim();
+    const riskLevel = parseFloat($('.loaded-weather-section .tick-arrow').css('left')) || 0;
+
+    // ☁️ Parse weather events
+    const events = [];
+    $('.results-list .item').each((index, element) => {
+      const date = $(element).find('.media-left b').text().trim();
+      const weatherType = $(element).find('.media-body .bold').text().trim();
+      const magnitude = $(element).find('.media-body').contents().last().text().trim();
+      events.push({ date, weatherType, magnitude });
+    });
+
+    // 🧱 Fetch roof footprint from Roofr
+    const footprintUrl = `https://footprints.roofr.com/footprint/${lat}/${lng}`;
+    const footprintResponse = await axios.get(footprintUrl);
+    const footprintData = footprintResponse.data.data?.[0] || {};
+
+    const result = {
+      address,
+      property,
+      historyCount,
+      riskFactor,
+      riskLevel,
+      Centroid: JSON.stringify(footprintData.centroid || {}),
+      Sqft: footprintData.sqft || null,
+      Geojson: JSON.stringify(footprintData.geojson || {}),
+      Distance: footprintData.distance || null,
+      events,
+    };
+
+    return {
+      statusCode: 200,
+      headers: {
+        'Content-Type': 'application/json',
+        'Access-Control-Allow-Origin': '*',
+      },
+      body: JSON.stringify(result),
+    };
+  } catch (error) {
+    console.error('Error:', error);
+    return {
+      statusCode: 500,
+      headers: {
+        'Content-Type': 'application/json',
+        'Access-Control-Allow-Origin': '*',
+      },
+      body: JSON.stringify({
+        error: 'An error occurred while fetching weather data',
+        message: error.message,
+      }),
+    };
+  }
 };
